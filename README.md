@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run jbro-test (Defender CLI)
-        uses: <owner>/jbro-test@v1
+        uses: jbrotsos/jbro-test-ghaction@v1
         with:
           args: 'scan --path .'
 ```
