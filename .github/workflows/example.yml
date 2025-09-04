@@ -1,0 +1,17 @@
+name: Example - jbro-test usage
+on:
+  workflow_dispatch: {}
+
+jobs:
+  run-defender:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run jbro-test
+        uses: <owner>/jbro-test@v1
+        env:
+          GDN_MDC_CLI_TENANT_ID: ${{ secrets.GDN_MDC_CLI_TENANT_ID }}
+          GDN_MDC_CLI_CLIENT_ID: ${{ secrets.GDN_MDC_CLI_CLIENT_ID }}
+          GDN_MDC_CLI_CLIENT_SECRET: ${{ secrets.GDN_MDC_CLI_CLIENT_SECRET }}
+        with:
+          args: '--version'

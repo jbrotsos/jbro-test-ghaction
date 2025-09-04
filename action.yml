@@ -1,0 +1,55 @@
+name: "jbro-test"
+description: "Run the Microsoft Defender CLI (linux x64) from a GitHub Action. Publish this repo and tag releases like `v1` for Marketplace versions."
+inputs:
+  args:
+    description: "Arguments to pass to the Defender CLI (e.g. 'scan --path .')."
+    required: false
+    default: "--help"
+  cli-cache-dir:
+    description: "Optional path to cache the downloaded CLI."
+    required: false
+    default: "${{ github.workspace }}/.cache/jbro-test"
+runs:
+  using: "composite"
+  steps:
+    - name: Check runner OS
+      shell: bash
+      run: |
+        if [ "$(uname -s)" != "Linux" ]; then
+          echo "This action currently supports Linux runners only because the CLI is linux-x64." >&2
+          exit 1
+        fi
+    - name: Prepare cache
+      shell: bash
+      run: |
+        CACHE_DIR="${{ inputs.cli-cache-dir }}"
+        mkdir -p "${CACHE_DIR}"
+    - name: Download Defender CLI (cached)
+      shell: bash
+      run: |
+        CACHE_DIR="${{ inputs.cli-cache-dir }}"
+        CLI_PATH="${CACHE_DIR}/defender-cli_linux-x64"
+        if [ ! -f "$CLI_PATH" ]; then
+          echo "Downloading Defender CLI to $CLI_PATH..."
+          curl -fsSL -o "$CLI_PATH" "https://aka.ms/defender-cli_linux-x64"
+          chmod +x "$CLI_PATH"
+        else
+          echo "Using cached CLI at $CLI_PATH"
+        fi
+        echo "CLI_PATH=$CLI_PATH" >> "$GITHUB_ENV"
+    - name: Validate required environment variables
+      shell: bash
+      run: |
+        set -euo pipefail
+        : "${GDN_MDC_CLI_TENANT_ID:?Required env var GDN_MDC_CLI_TENANT_ID is not set}"
+        : "${GDN_MDC_CLI_CLIENT_ID:?Required env var GDN_MDC_CLI_CLIENT_ID is not set}"
+        : "${GDN_MDC_CLI_CLIENT_SECRET:?Required env var GDN_MDC_CLI_CLIENT_SECRET is not set}"
+    - name: Run Defender CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -z "${CLI_PATH:-}" ]; then
+          CLI_PATH="${{ inputs.cli-cache-dir }}/defender-cli_linux-x64"
+        fi
+        echo "Invoking CLI: $CLI_PATH ${{ inputs.args }}"
+        exec "$CLI_PATH" ${{ inputs.args }}
