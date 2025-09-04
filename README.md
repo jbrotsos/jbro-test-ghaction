@@ -44,11 +44,12 @@ Set these as GitHub Secrets in your repository (Settings → Secrets → Actions
 steps:
   - uses: actions/checkout@v4
   - name: Run jbro-test
-    uses: <owner>/jbro-test@v1
+    uses: jbrotsos/jbro-test-ghaction@v1
     env:
       GDN_MDC_CLI_TENANT_ID: ${{ secrets.GDN_MDC_CLI_TENANT_ID }}
       GDN_MDC_CLI_CLIENT_ID: ${{ secrets.GDN_MDC_CLI_CLIENT_ID }}
       GDN_MDC_CLI_CLIENT_SECRET: ${{ secrets.GDN_MDC_CLI_CLIENT_SECRET }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # used to post PR comments
     with:
       args: 'scan --path .'
 ```

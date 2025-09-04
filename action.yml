@@ -53,3 +53,35 @@ runs:
         fi
         echo "Invoking CLI: $CLI_PATH ${{ inputs.args }}"
         exec "$CLI_PATH" ${{ inputs.args }}
+    - name: Comment on pull request (if applicable)
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Only attempt to comment on pull_request events
+        if [ "${GITHUB_EVENT_NAME:-}" != "pull_request" ]; then
+          echo "Event is not a pull_request (GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-}); skipping PR comment"
+          exit 0
+        fi
+
+        # Extract PR number from the event payload
+        if [ -z "${GITHUB_EVENT_PATH:-}" ] || [ ! -f "${GITHUB_EVENT_PATH}" ]; then
+          echo "GITHUB_EVENT_PATH is missing or invalid; cannot determine PR number" >&2
+          exit 0
+        fi
+
+        PR_NUMBER=$(python3 -c "import json,sys
+p=json.load(open('${GITHUB_EVENT_PATH}'))
+print(p.get('pull_request',{}).get('number',''))")
+        if [ -z "$PR_NUMBER" ]; then
+          echo "Could not determine pull request number; skipping comment"
+          exit 0
+        fi
+
+        # Build comment body
+        COMMENT_BODY="Defender CLI scan executed by jbro-test (run id: ${GITHUB_RUN_ID:-unknown})."
+
+        # Post comment (use issues API to create PR comment)
+        API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments"
+        echo "Posting comment to $API_URL"
+        curl -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+          -d "{ \"body\": \"${COMMENT_BODY}\" }" "$API_URL" || echo "Failed to post PR comment"
