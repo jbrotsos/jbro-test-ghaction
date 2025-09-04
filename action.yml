@@ -1,5 +1,5 @@
 name: "jbro-test"
-description: "Run the Microsoft Defender CLI (linux x64) from a GitHub Action. Publish this repo and tag releases like `v1` for Marketplace versions."
+description: "Run Microsoft Defender CLI (linux x64) on Linux runners."
 inputs:
   args:
     description: "Arguments to pass to the Defender CLI (e.g. 'scan --path .')."
